@@ -1,0 +1,33 @@
+scheming_version: 2
+dataset_type: preset
+about_url: http://github.com/ckan/ckanext-scheming
+
+dataset_fields:
+
+  - field_name: title
+    label: Title
+    preset: title
+    form_placeholder: eg. A descriptive title
+
+  - field_name: name
+    label: URL
+    preset: dataset_slug
+    form_placeholder: eg. my-preset
+
+  - field_name: notes
+    label: Description
+    form_snippet: markdown.html
+    form_placeholder: eg. Some useful notes about the data
+
+  - field_name: owner_org
+    label: Organization
+    preset: dataset_organization
+
+  - field_name: license_id
+    label: License
+
+  - field_name: res_format
+    label: Format
+
+  - field_name: tags
+    label: Tags
