@@ -23,11 +23,15 @@ dataset_fields:
     label: Organization
     preset: dataset_organization
 
-  - field_name: license_id
+  - field_name: search_preset_field_license_id
     label: License
 
-  - field_name: res_format
+  - field_name: search_preset_field_res_format
     label: Format
 
-  - field_name: tags
+  - field_name: search_preset_field_tags
     label: Tags
+
+resource_fields:
+
+  - field_name: url

@@ -1,0 +1,13 @@
+{% ckan_extends %}
+
+{% block primary_content_inner %}
+    {{ super() }}
+
+    {% block search_preset_section_wrapper %}
+        {% block search_preset_section %}
+            {% if dataset_type in h.search_preset_preset_types() %}
+                {% snippet "search_preset/snippets/preset_section.html", id=pkg.id, group_by=h.search_preset_group_by_field() %}
+            {% endif %}
+        {% endblock search_preset_section %}
+    {% endblock search_preset_section_wrapper %}
+{% endblock primary_content_inner %}

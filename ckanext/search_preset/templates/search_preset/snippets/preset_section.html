@@ -1,0 +1,29 @@
+{#
+id - preset(package) id
+group_by - field to group packages by, before rendering items
+#}
+
+{% set packages = h.search_preset_list_preset(id)['results'] %}
+
+<section class="search-preset-packages">
+    <h2>{{ _("Datasets") }}</h2>
+    <div class="package-list">
+    {% if group_by %}
+        {% for group, packages in (packages)|groupby(group_by) %}
+            <div class="search-preset-group">
+                <h3 class="heading">
+                    {{ group }}
+                </h3>
+                <div class="package-list">
+                    {% block package_list scoped %}
+                        {% snippet 'search_preset/snippets/package_list.html', packages=packages %}
+                    {% endblock package_list%}
+                </div>
+            </div>
+        {% endfor %}
+    {% else %}
+        <div class="package-list">
+            {{ self.package_list() }}
+        </div>
+    {% endif %}
+</section>

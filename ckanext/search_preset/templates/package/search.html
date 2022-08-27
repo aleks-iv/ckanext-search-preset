@@ -1,0 +1,13 @@
+{% ckan_extends %}
+
+{% block page_primary_action %}
+    {{ super() }}
+
+    {% block search_preset_add %}
+        {% if h.check_access('search_preset_preset_create') %}
+            <div class="page_primary_action">
+                {% snippet 'search_preset/snippets/add_preset.html', filters=h.search_preset_prepare_filters(fields_grouped) %}
+            </div>
+        {% endif %}
+    {% endblock search_preset_add %}
+{% endblock %}

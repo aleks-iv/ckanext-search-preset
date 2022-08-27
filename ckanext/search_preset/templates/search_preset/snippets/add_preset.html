@@ -1,0 +1,18 @@
+{#
+type - package type of preset
+btn_classes - css-classes for simple style overrides
+#}
+
+{% set type = type|default(h.search_preset_default_preset_type()) %}
+{% set btn_classes = btn_classes|default("btn btn-primary") %}
+
+{% set default_icon %}<i class="fa fa-sitemap"></i>{% endset %}
+{% set icon = icon|default(default_icon) %}
+
+
+{% if filters %}
+    <a class="{{ btn_classes }}" href="{{ h.url_for(type ~ '.new', private=False, **filters) }}">
+        {{ icon }}
+        {{ _('Create {type}').format(type=type|capitalize) }}
+    </a>
+{% endif %}
