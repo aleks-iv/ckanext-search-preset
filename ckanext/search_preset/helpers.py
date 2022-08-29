@@ -19,6 +19,9 @@ DEFAULT_TYPES = []
 CONFIG_GROUP_FIELD = "ckanext.search_preset.group_by_field"
 DEFAULT_GROUP_FIELD = None
 
+CONFIG_EXTRAS_FIELD = "ckanext.search_preset.extras_field"
+DEFAULT_EXTRAS_FIELD = None
+
 CONFIG_TTL = "ckanext.search_preset.stats_ttl"
 DEFAULT_TTL = 0
 
@@ -28,6 +31,8 @@ DEFAULT_PREFIX = "search_preset_field_"
 CONFIG_ALLOWED = "ckanext.search_preset.allowed_facets"
 DEFAULT_ALLOWED = []
 
+CONFIG_ALLOWED_EXTRAS = "ckanext.search_preset.allowed_extras"
+DEFAULT_ALLOWED_EXTRAS = []
 
 @helper
 def default_preset_type() -> str:
@@ -64,6 +69,12 @@ def filter_field_prefix() -> str:
 
 
 @helper
+def extras_field() -> Optional[str]:
+    """Field that holds search extras."""
+    return tk.config.get(CONFIG_EXTRAS_FIELD, DEFAULT_EXTRAS_FIELD)
+
+
+@helper
 def group_by_field() -> Optional[str]:
     """Field used for combining packages on the preset page."""
     return tk.config.get(CONFIG_GROUP_FIELD, DEFAULT_GROUP_FIELD)
@@ -78,7 +89,7 @@ def accept_filters(filters: dict[str, list[str]]) -> bool:
     return bool(filters)
 
 @helper
-def prepare_filters(filters: dict[str, list[str]]) -> dict[str, list[str]]:
+def prepare_filters(filters: dict[str, list[str]]) -> dict[str, str]:
     """Prepare active facets before assigning them to the preset fields."""
     if not tk.h.search_preset_accept_filters(filters):
         return {}
@@ -89,11 +100,26 @@ def prepare_filters(filters: dict[str, list[str]]) -> dict[str, list[str]]:
     )
     allow_everything = not allowed_fields
 
-    return {
+    prepared = {
         prefix + k: json.dumps(v)
         for k, v in filters.items()
         if allow_everything or k in allowed_fields
     }
+
+    ef: str = tk.h.search_preset_extras_field()
+    if ef:
+        allowed_extras = set(
+            tk.aslist(tk.config.get(CONFIG_ALLOWED_EXTRAS, DEFAULT_ALLOWED_EXTRAS))
+        )
+        allow_all_extras = not allowed_extras
+        prepared[ef] = json.dumps({
+            k: v
+            for k, v
+            in tk.request.params.to_dict(flat=True).items()
+            if k.startswith("ext_") and (allow_all_extras or k in allowed_extras)
+        })
+
+    return prepared
 
 
 @helper
@@ -111,22 +137,24 @@ def list_preset(
     extra_search: dict[str, Any] = {},
 ) -> dict[str, Any]:
     """Return the search result with all the packages included into preset."""
-    fq = tk.h.search_preset_fq_from_preset(id_, exclude_preset=True) + extra_fq
+    data_dict = tk.h.search_preset_payload_from_preset(id_, exclude_preset=True)
+    data_dict["fq"] += " " + extra_fq
+    data_dict["rows"] = limit
 
-    data_dict = {"fq": fq, "rows": limit}
     data_dict.update(extra_search)
     result = tk.get_action("package_search")({}, data_dict)
     return result
 
 
 @helper
-def fq_from_preset(id_: str, exclude_preset: bool = False) -> str:
+def payload_from_preset(id_: str, exclude_preset: bool = False) -> dict[str, Any]:
     """Extract fq produced by preset.
 
     Essentially, get all the active facets that were used when the preset was created.
     """
     pkg = tk.get_action("package_show")({}, {"id": id_})
-    prefix = tk.h.search_preset_filter_field_prefix()
+    prefix: str = tk.h.search_preset_filter_field_prefix()
+    ef: str = tk.h.search_preset_extras_field()
 
     fq = ""
 
@@ -160,11 +188,24 @@ def fq_from_preset(id_: str, exclude_preset: bool = False) -> str:
             continue
 
         field = k[len(prefix) :]
-        joined = " OR ".join(map(solr_literal, values))
-        fq += f" +{field}:({joined})"
+        # joined = " OR ".join(map(solr_literal, values))
+        # fq += f" +{field}:({joined})"
+        fq += " " + " ".join(f"{field}:{solr_literal(value)}" for value in values)
 
     if exclude_preset:
         type_ = pkg["type"]
         fq += f" -type:{type_} "
 
-    return fq
+    try:
+        extras = json.loads(pkg.get(ef) or "{}")
+    except ValueError:
+        log.warning(
+            "Search preset %s contains non-JSON value inside the"
+            " extras-filed %s: %s",
+            id_,
+            ef,
+            pkg[ef],
+        )
+        extras = {}
+
+    return {"fq": fq, "extras": extras}
