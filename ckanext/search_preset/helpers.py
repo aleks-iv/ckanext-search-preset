@@ -19,6 +19,8 @@ DEFAULT_TYPES = []
 CONFIG_GROUP_FIELD = "ckanext.search_preset.group_by_field"
 DEFAULT_GROUP_FIELD = None
 
+CONFIG_TTL = "ckanext.search_preset.stats_ttl"
+DEFAULT_TTL = 0
 
 CONFIG_PREFIX = "ckanext.search_preset.field_prefix"
 DEFAULT_PREFIX = "search_preset_field_"
@@ -68,8 +70,19 @@ def group_by_field() -> Optional[str]:
 
 
 @helper
+def accept_filters(filters: dict[str, list[str]]) -> bool:
+    """Decide if search preset can be created.
+
+    Can be redefined if more control over preset creation is required.
+    """
+    return bool(filters)
+
+@helper
 def prepare_filters(filters: dict[str, list[str]]) -> dict[str, list[str]]:
     """Prepare active facets before assigning them to the preset fields."""
+    if not tk.h.search_preset_accept_filters(filters):
+        return {}
+
     prefix = tk.h.search_preset_filter_field_prefix()
     allowed_fields = set(
         tk.aslist(tk.config.get(CONFIG_ALLOWED, DEFAULT_ALLOWED))
