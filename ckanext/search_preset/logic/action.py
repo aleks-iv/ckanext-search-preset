@@ -1,17 +1,16 @@
 from __future__ import annotations
 
-import logging
 import json
+import logging
 
 import ckan.plugins.toolkit as tk
-
 from ckan.lib.search.query import solr_literal
 from ckan.logic import validate
 
 from ckanext.toolbelt.decorators import Collector
 
-from . import schema
 from .. import config
+from . import schema
 
 log = logging.getLogger(__name__)
 action, get_actions = Collector("search_preset").split()

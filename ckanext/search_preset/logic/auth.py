@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import ckan.authz as authz
 import ckan.plugins.toolkit as tk
+
 from ckanext.toolbelt.decorators import Collector
 
 auth, get_auth_functions = Collector("search_preset").split()

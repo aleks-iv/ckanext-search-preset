@@ -4,7 +4,7 @@ import ckan.plugins as plugins
 import ckan.plugins.toolkit as tk
 
 from . import helpers
-from .logic import auth, action
+from .logic import action, auth
 
 
 class SearchPresetPlugin(plugins.SingletonPlugin):

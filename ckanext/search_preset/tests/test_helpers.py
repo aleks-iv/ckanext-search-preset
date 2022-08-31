@@ -1,6 +1,9 @@
 import json
+
 import pytest
-from .. import helpers as h, config
+
+from .. import config
+from .. import helpers as h
 
 
 class TestDefaultPreset:

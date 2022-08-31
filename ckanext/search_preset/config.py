@@ -2,7 +2,6 @@ import ckan.plugins.toolkit as tk
 
 from ckanext.toolbelt.utils import config_getter
 
-
 CONFIG_DEFAULT_TYPE = "ckanext.search_preset.default_type"
 DEFAULT_DEFAULT_TYPE = None
 default_type = config_getter(CONFIG_DEFAULT_TYPE, DEFAULT_DEFAULT_TYPE)

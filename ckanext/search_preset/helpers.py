@@ -1,10 +1,13 @@
 from __future__ import annotations
+
 import json
 import logging
 from typing import Any, Optional
 
 import ckan.plugins.toolkit as tk
+
 from ckanext.toolbelt.decorators import Collector
+
 from . import config
 
 log = logging.getLogger(__name__)

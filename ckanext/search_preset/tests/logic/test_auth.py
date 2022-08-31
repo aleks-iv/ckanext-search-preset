@@ -1,7 +1,5 @@
-import pytest
-
 import ckan.plugins.toolkit as tk
-
+import pytest
 from ckan.tests.helpers import call_auth
 
 
