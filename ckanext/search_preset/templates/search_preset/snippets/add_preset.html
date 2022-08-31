@@ -10,7 +10,7 @@ btn_classes - css-classes for simple style overrides
 {% set icon = icon|default(default_icon) %}
 
 
-{% if filters %}
+{% if type and filters %}
     <a class="{{ btn_classes }}" href="{{ h.url_for(type ~ '.new', private=False, **filters) }}">
         {{ icon }}
         {{ _('Create {type}').format(type=type|capitalize) }}

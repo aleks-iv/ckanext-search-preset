@@ -4,55 +4,32 @@ import logging
 from typing import Any, Optional
 
 import ckan.plugins.toolkit as tk
-from ckan.lib.search.query import solr_literal
 from ckanext.toolbelt.decorators import Collector
+from . import config
 
 log = logging.getLogger(__name__)
 helper, get_helpers = Collector("search_preset").split()
 
-CONFIG_DEFAULT_TYPE = "ckanext.search_preset.default_type"
-DEFAULT_DEFAULT_TYPE = "preset"
-
-CONFIG_TYPES = "ckanext.search_preset.package_types"
-DEFAULT_TYPES = []
-
-CONFIG_GROUP_FIELD = "ckanext.search_preset.group_by_field"
-DEFAULT_GROUP_FIELD = None
-
-CONFIG_EXTRAS_FIELD = "ckanext.search_preset.extras_field"
-DEFAULT_EXTRAS_FIELD = None
-
-CONFIG_TTL = "ckanext.search_preset.stats_ttl"
-DEFAULT_TTL = 0
-
-CONFIG_PREFIX = "ckanext.search_preset.field_prefix"
-DEFAULT_PREFIX = "search_preset_field_"
-
-CONFIG_ALLOWED = "ckanext.search_preset.allowed_facets"
-DEFAULT_ALLOWED = []
-
-CONFIG_ALLOWED_EXTRAS = "ckanext.search_preset.allowed_extras"
-DEFAULT_ALLOWED_EXTRAS = []
 
 @helper
-def default_preset_type() -> str:
+def default_preset_type() -> Optional[str]:
     """Return the default package type of search preset.
 
     This value can be used to decide which preset to use on standard snippets
     whenever multiple preset types available.
 
     """
-    return tk.config.get(CONFIG_DEFAULT_TYPE, DEFAULT_DEFAULT_TYPE)
+    return config.default_type()
 
 
 @helper
 def preset_types() -> set[str]:
     """Return all the possible package types of the search preset."""
-    default: str = tk.h.search_preset_default_preset_type()
-    types: set[str] = set(
-        tk.aslist(tk.config.get(CONFIG_TYPES, DEFAULT_TYPES))
-    )
-    types.add(default)
+    types: set[str] = set(config.types())
+
+    default: Optional[str] = config.default_type()
+    if default:
+        types.add(default)
 
     return types
 
@@ -65,29 +42,32 @@ def filter_field_prefix() -> str:
     used for separating metadata-fields from filter-fields.
 
     """
-    return tk.config.get(CONFIG_PREFIX, DEFAULT_PREFIX)
+    return config.prefix()
 
 
 @helper
 def extras_field() -> Optional[str]:
     """Field that holds search extras."""
-    return tk.config.get(CONFIG_EXTRAS_FIELD, DEFAULT_EXTRAS_FIELD)
+    return config.extras_field()
 
 
+#
 @helper
 def group_by_field() -> Optional[str]:
     """Field used for combining packages on the preset page."""
-    return tk.config.get(CONFIG_GROUP_FIELD, DEFAULT_GROUP_FIELD)
+    return config.group_field()
 
 
 @helper
 def accept_filters(filters: dict[str, list[str]]) -> bool:
-    """Decide if search preset can be created.
+    """Decide whether search filters should be processed(or completely ignored).
 
     Can be redefined if more control over preset creation is required.
     """
-    return bool(filters)
+    return True
 
+
+#
 @helper
 def prepare_filters(filters: dict[str, list[str]]) -> dict[str, str]:
     """Prepare active facets before assigning them to the preset fields."""
@@ -95,9 +75,7 @@ def prepare_filters(filters: dict[str, list[str]]) -> dict[str, str]:
         return {}
 
     prefix = tk.h.search_preset_filter_field_prefix()
-    allowed_fields = set(
-        tk.aslist(tk.config.get(CONFIG_ALLOWED, DEFAULT_ALLOWED))
-    )
+    allowed_fields = set(config.allowed())
     allow_everything = not allowed_fields
 
     prepared = {
@@ -107,28 +85,30 @@ def prepare_filters(filters: dict[str, list[str]]) -> dict[str, str]:
     }
 
     ef: str = tk.h.search_preset_extras_field()
+
     if ef:
-        allowed_extras = set(
-            tk.aslist(tk.config.get(CONFIG_ALLOWED_EXTRAS, DEFAULT_ALLOWED_EXTRAS))
-        )
+        allowed_extras = set(config.allowed_extras())
         allow_all_extras = not allowed_extras
-        prepared[ef] = json.dumps({
-            k: v
-            for k, v
-            in tk.request.params.to_dict(flat=True).items()
-            if k.startswith("ext_") and (allow_all_extras or k in allowed_extras)
-        })
+        prepared[ef] = json.dumps(
+            {
+                k: v
+                for k, v in tk.request.params.to_dict(flat=True).items()
+                if k.startswith("ext_")
+                and (allow_all_extras or k in allowed_extras)
+            }
+        )
 
     return prepared
 
 
+#
 @helper
 def count_preset(id_: str, extra_fq: str = "") -> int:
     """Count the number of packages included into preset."""
-    result = tk.h.search_preset_list_preset(id_, extra_fq, 0)
-    return result["count"]
+    return tk.get_action("search_preset_preset_count")({}, {"id": id_, "extra_fq": extra_fq})
 
 
+#
 @helper
 def list_preset(
     id_: str,
@@ -137,75 +117,20 @@ def list_preset(
     extra_search: dict[str, Any] = {},
 ) -> dict[str, Any]:
     """Return the search result with all the packages included into preset."""
-    data_dict = tk.h.search_preset_payload_from_preset(id_, exclude_preset=True)
-    data_dict["fq"] += " " + extra_fq
-    data_dict["rows"] = limit
-
-    data_dict.update(extra_search)
-    result = tk.get_action("package_search")({}, data_dict)
-    return result
+    return tk.get_action("search_preset_preset_list")({}, {
+        "id": id_,
+        "extra_fq": extra_fq,
+        "rows": limit,
+        "search_patch": extra_search
+    })
 
 
 @helper
-def payload_from_preset(id_: str, exclude_preset: bool = False) -> dict[str, Any]:
-    """Extract fq produced by preset.
+def payload_from_preset(
+    id_: str, exclude_self: bool = False
+) -> dict[str, Any]:
+    """Extract search parameters produced by preset.
 
     Essentially, get all the active facets that were used when the preset was created.
     """
-    pkg = tk.get_action("package_show")({}, {"id": id_})
-    prefix: str = tk.h.search_preset_filter_field_prefix()
-    ef: str = tk.h.search_preset_extras_field()
-
-    fq = ""
-
-    for k, v in pkg.items():
-        if not k.startswith(prefix) or not v:
-            continue
-
-        try:
-            values = json.loads(v)
-        except ValueError:
-            log.warning(
-                "Search preset %s contains non-JSON value inside the"
-                " filter-filed %s: %s",
-                id_,
-                k,
-                v,
-            )
-            continue
-
-        if not isinstance(values, list):
-            log.warning(
-                "Search preset %s supports only list value inside the"
-                " filter-filed %s: %s",
-                id_,
-                k,
-                values,
-            )
-            continue
-
-        if not values:
-            continue
-
-        field = k[len(prefix) :]
-        # joined = " OR ".join(map(solr_literal, values))
-        # fq += f" +{field}:({joined})"
-        fq += " " + " ".join(f"{field}:{solr_literal(value)}" for value in values)
-
-    if exclude_preset:
-        type_ = pkg["type"]
-        fq += f" -type:{type_} "
-
-    try:
-        extras = json.loads(pkg.get(ef) or "{}")
-    except ValueError:
-        log.warning(
-            "Search preset %s contains non-JSON value inside the"
-            " extras-filed %s: %s",
-            id_,
-            ef,
-            pkg[ef],
-        )
-        extras = {}
-
-    return {"fq": fq, "extras": extras}
+    return tk.get_action("search_preset_preset_payload")({}, {"id": id_, "exclude_self" :exclude_self})
