@@ -121,7 +121,7 @@ prefix is `search_preset_field_` and it can be changed using
 
 Example of a schema for `ckanext-schema` with a definition of preset, that keeps
 values of `license_id`, `res_format` and `tags` facets, can be found at
-[`ckanext/search-preset/example_preset.yaml`](ckanext/search-preset/example_preset.yaml).
+[`ckanext/search_preset/example_preset.yaml`](ckanext/search_preset/example_preset.yaml).
 
 All the active facets are stored as JSON encoded arrays of values. It means that
 you can avoid using ❷ and create preset using `ckanapi`, for example:
