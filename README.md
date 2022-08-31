@@ -2,71 +2,147 @@
 
 # ckanext-search-preset
 
-**TODO:** Put a description of your extension here:  What does it do? What features does it have? Consider including some screenshots or embedding a video!
+Plugin that adds a number of API actions/helpers for storing search facets as a package fields and listing all the dataset that satisfies stored facets.
 
+One of examples, where you can use this extension:
+
+- you need a dataset that "contains" a lot of other datasets. Let's call this
+dataset a **collection**
+- these "other" datasets can be described by the fixed set of search facets. For
+example: all the _public_ datasets with at least one _CSV resource_ and _CC-BY_
+license.
+- you want to select all the necessary facets on the search page❶, and
+trigger **collection** creation from there❷(right after seing all the target
+datasets, that are going to be included into the **collection**)
+- When collection is created, you want to see all the datasets that satisfies
+given facets on the collection page❸. In future, all the new datasets that
+satisfy given facets, should be added automatically to the collection page.
+
+![Preview of search page](img/search-page.png)
+![Preview of preset page](img/preset-page.png)
+
+On the screenshots above you can observe default behavior of this plugin. Of course, these widgets require proper styling. Just use them as starting point(source code is available inside `ckanext/search-preset/templates` folder of the current extension) and customize for your needs.
+
+## Content
+
+- [Requirements](#requirements)
+- [Installation](#installation)
+- [Preset requirements](#preset-requirements)
+- [Developer installation](#developer-installation)
+- [Tests](#tests)
 
 ## Requirements
 
-**TODO:** For example, you might want to mention here which versions of CKAN this
-extension works with.
-
-If your extension works across different versions you can add the following table:
+This extension requires Python v3.7 or newer.
 
 Compatibility with core CKAN versions:
 
-| CKAN version    | Compatible?   |
-| --------------- | ------------- |
-| 2.6 and earlier | not tested    |
-| 2.7             | not tested    |
-| 2.8             | not tested    |
-| 2.9             | not tested    |
-
-Suggested values:
-
-* "yes"
-* "not tested" - I can't think of a reason why it wouldn't work
-* "not yet" - there is an intention to get it working
-* "no"
-
+| CKAN version | Compatible? |
+| ------------ | ----------- |
+| 2.9          | yes         |
+| 2.10         | yes         |
 
 ## Installation
 
-**TODO:** Add any additional install steps to the list below.
-   For example installing any non-Python dependencies or adding any required
-   config settings.
-
 To install ckanext-search-preset:
 
-1. Activate your CKAN virtual environment, for example:
+1. Install the extension via pip
 
-     . /usr/lib/ckan/default/bin/activate
+   ```sh
+   pip install ckanext-search-preset
+   ```
 
-2. Clone the source and install it on the virtualenv
+1. Add `search-preset` to the `ckan.plugins` setting in your CKAN
+   config file.
 
-    git clone https://github.com/DataShades/ckanext-search-preset.git
-    cd ckanext-search-preset
-    pip install -e .
-	pip install -r requirements.txt
-
-3. Add `search-preset` to the `ckan.plugins` setting in your CKAN
-   config file (by default the config file is located at
-   `/etc/ckan/default/ckan.ini`).
-
-4. Restart CKAN. For example if you've deployed CKAN with Apache on Ubuntu:
-
-     sudo service apache2 reload
-
+1. Create custom package type that will serve a role of preset(collection).
+   [Here](#preset-requirements) you can find more details about requirements for
+   this package type.
 
 ## Config settings
 
-None at present
+```ini
+# Default preset type created by "Create Preset" button on the search page
+ckanext.search_preset.default_type = preset
 
-**TODO:** Document any optional config settings here. For example:
+# List of preset types that should show matching packages(❷) on their details
+# page
+# (optional, default: <value of default_type option>).
+ckanext.search_preset.package_types = preset collection dataset
 
-	# The minimum number of hours to wait before re-checking a resource
-	# (optional, default: 24).
-	ckanext.search_preset.some_setting = some_default_value
+# Field that is used for grouping the packages before printing them on the
+# preset page
+# (optional, default: none).
+ckanext.search_preset.group_by_field = type
 
+# Prefix of the preset fields that will hold details about active facets
+# (optional, default: "search_preset_field_").
+ckanext.search_preset.field_prefix = facet_field_
+
+# List of facets that can be used by preset. By default, any existing facet is
+# allowed.
+# (optional, default: <any existing facet>).
+ckanext.search_preset.allowed_facets = license_id organization
+
+# Preset field that holds all the `ext_*` fields that were available during
+# preset creation via ❶
+# (optional, default: none).
+ckanext.search_preset.extras_field = search_extra_field_
+
+# List of `ext_*` that will be captured by preset if `extras_field` specified.
+# By default, all the `ext_*` fields are captured.
+# (optional, default: <any passed extra field>).
+ckanext.search_preset.allowed_extras = ext_bbox ext_start_date
+```
+
+## Preset requirements
+
+In order to function properly, this extension requires a special "preset"
+package type. One can register one *default* preset type(which will be used by
+existing widgets) using `ckanext.search_preset.default_type` config option and
+arbitrary number of additional preset types using
+`ckanext.search_preset.package_types` config option.
+
+If no default type configured, create-preset button on the search page(❷) will
+not be shown, but you still can create search presets programmatically.
+
+If neither default, nor additional types configured, datasets won't be shown on
+the preset page(❸). Because there is no way to tell, which package type is a
+"preset" type, obviously.
+
+Whenever you are creating a preset using ❷, all the active facets will be stored
+inside custom fields of the preset package. You have to define these fields in
+advance, by customizing package schema. The plugin will make an atempt to save
+the value of facet inside a filed named as `<PREFIX><FACET_NAME>`. Default
+prefix is `search_preset_field_` and it can be changed using
+`ckanext.search_preset.field_prefix` config option. So, in order to store
+`license_id` facet, with default prefix, you have to define a field named
+`search_preset_field_license_id`.
+
+Example of a schema for `ckanext-schema` with a definition of preset, that keeps
+values of `license_id`, `res_format` and `tags` facets, can be found at
+[`ckanext/search-preset/example_preset.yaml`](ckanext/search-preset/example_preset.yaml).
+
+All the active facets are stored as JSON encoded arrays of values. It means that
+you can avoid using ❷ and create preset using `ckanapi`, for example:
+
+```sh
+ckanapi action package_create \
+    name=datasets-with-tag-xxx \
+    type=<preset-type> \
+    search_preset_field_tags='["xxx"]'
+```
+
+You can start from the example schema of preset and adapt it for your needs. For
+example, you can replace plain input fields with hidden fields.
+
+Whenever user visits the preset details page, the list of datasets that matches preset's filters, will be shown at the bottom of the page. You can rewrite the Jinja2 block and snippet that reponsible for this output(❸).
+
+In addition, the list of preset's packages can be obtained via `ckanapi`:
+
+```sh
+ckanapi action search_preset_preset_list id=<preset-id-or-name>
+```
 
 ## Developer installation
 
@@ -75,48 +151,13 @@ do:
 
     git clone https://github.com/DataShades/ckanext-search-preset.git
     cd ckanext-search-preset
-    python setup.py develop
-    pip install -r dev-requirements.txt
-
+    pip install -e '.[dev]'
 
 ## Tests
 
 To run the tests, do:
 
     pytest --ckan-ini=test.ini
-
-
-## Releasing a new version of ckanext-search-preset
-
-If ckanext-search-preset should be available on PyPI you can follow these steps to publish a new version:
-
-1. Update the version number in the `setup.py` file. See [PEP 440](http://legacy.python.org/dev/peps/pep-0440/#public-version-identifiers) for how to choose version numbers.
-
-2. Make sure you have the latest version of necessary packages:
-
-    pip install --upgrade setuptools wheel twine
-
-3. Create a source and binary distributions of the new version:
-
-       python setup.py sdist bdist_wheel && twine check dist/*
-
-   Fix any errors you get.
-
-4. Upload the source distribution to PyPI:
-
-       twine upload dist/*
-
-5. Commit any outstanding changes:
-
-       git commit -a
-       git push
-
-6. Tag the new release of the project on GitHub with the version number from
-   the `setup.py` file. For example if the version number in `setup.py` is
-   0.0.1 then do:
-
-       git tag 0.0.1
-       git push --tags
 
 ## License
 
