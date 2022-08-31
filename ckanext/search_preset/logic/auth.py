@@ -21,7 +21,9 @@ def preset_payload(context, data_dict):
 @auth
 @tk.auth_allow_anonymous_access
 def preset_list(context, data_dict):
-    return authz.is_authorized("search_preset_preset_payload", context, data_dict)
+    return authz.is_authorized(
+        "search_preset_preset_payload", context, data_dict
+    )
 
 
 @auth

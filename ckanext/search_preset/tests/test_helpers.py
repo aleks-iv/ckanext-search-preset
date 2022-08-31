@@ -83,62 +83,125 @@ class TestPrepareFilters:
             }
 
 
-
 @pytest.mark.usefixtures("with_plugins", "clean_db", "clean_index")
 class TestListPreset:
     def test_basic(self, package_factory):
-        d1 = package_factory(license_id='notspecified')
-        d2 = package_factory(license_id='cc-by')
+        d1 = package_factory(license_id="notspecified")
+        d2 = package_factory(license_id="cc-by")
 
-        preset = package_factory(**{config.DEFAULT_PREFIX + "license_id": '["notspecified"]', "type": "test_preset"})
+        preset = package_factory(
+            **{
+                config.DEFAULT_PREFIX + "license_id": '["notspecified"]',
+                "type": "test_preset",
+            }
+        )
         packages = h.list_preset(preset["id"])
         assert packages["count"] == 1
         assert packages["results"][0]["id"] == d1["id"]
 
-        preset = package_factory(**{config.DEFAULT_PREFIX + "license_id": '["cc-by"]', "type": "test_preset"})
+        preset = package_factory(
+            **{
+                config.DEFAULT_PREFIX + "license_id": '["cc-by"]',
+                "type": "test_preset",
+            }
+        )
         packages = h.list_preset(preset["id"])
         assert packages["count"] == 1
         assert packages["results"][0]["id"] == d2["id"]
 
-        preset = package_factory(**{config.DEFAULT_PREFIX + "license_id": '["notspecified", "cc-by"]', "type": "test_preset"})
+        preset = package_factory(
+            **{
+                config.DEFAULT_PREFIX
+                + "license_id": '["notspecified", "cc-by"]',
+                "type": "test_preset",
+            }
+        )
         packages = h.list_preset(preset["id"])
         assert packages["count"] == 0
+
 
 @pytest.mark.usefixtures("with_plugins", "clean_db", "clean_index")
 class TestCountPreset:
     def test_basic(self, package_factory):
-        d1 = package_factory(license_id='notspecified')
-        d2 = package_factory(license_id='cc-by')
+        d1 = package_factory(license_id="notspecified")
+        d2 = package_factory(license_id="cc-by")
 
-        preset = package_factory(**{config.DEFAULT_PREFIX + "license_id": '["notspecified"]', "type": "test_preset"})
+        preset = package_factory(
+            **{
+                config.DEFAULT_PREFIX + "license_id": '["notspecified"]',
+                "type": "test_preset",
+            }
+        )
         assert h.count_preset(preset["id"]) == 1
 
-        preset = package_factory(**{config.DEFAULT_PREFIX + "license_id": '["cc-by"]', "type": "test_preset"})
+        preset = package_factory(
+            **{
+                config.DEFAULT_PREFIX + "license_id": '["cc-by"]',
+                "type": "test_preset",
+            }
+        )
         assert h.count_preset(preset["id"]) == 1
 
-        preset = package_factory(**{config.DEFAULT_PREFIX + "license_id": '["notspecified", "cc-by"]', "type": "test_preset"})
+        preset = package_factory(
+            **{
+                config.DEFAULT_PREFIX
+                + "license_id": '["notspecified", "cc-by"]',
+                "type": "test_preset",
+            }
+        )
         assert h.count_preset(preset["id"]) == 0
 
 
 @pytest.mark.usefixtures("with_plugins", "clean_db")
 class TestPayloadFromPreset:
     def test_basic(self, package_factory):
-        preset = package_factory(**{config.DEFAULT_PREFIX + "license_id": '["notspecified"]', "type": "test_preset"})
+        preset = package_factory(
+            **{
+                config.DEFAULT_PREFIX + "license_id": '["notspecified"]',
+                "type": "test_preset",
+            }
+        )
         payload = h.payload_from_preset(preset["id"])
-        assert payload == {'extras': {}, 'fq': 'license_id:"notspecified"'}
+        assert payload == {"extras": {}, "fq": 'license_id:"notspecified"'}
 
     def test_exclude_self(self, package_factory):
-        preset = package_factory(**{config.DEFAULT_PREFIX + "license_id": '["notspecified"]', "type": "test_preset"})
+        preset = package_factory(
+            **{
+                config.DEFAULT_PREFIX + "license_id": '["notspecified"]',
+                "type": "test_preset",
+            }
+        )
         payload = h.payload_from_preset(preset["id"], True)
-        assert payload == {'extras': {}, 'fq': 'license_id:"notspecified" -id:{}'.format(preset["id"])}
+        assert payload == {
+            "extras": {},
+            "fq": 'license_id:"notspecified" -id:{}'.format(preset["id"]),
+        }
 
     @pytest.mark.ckan_config(config.CONFIG_EXTRAS_FIELD, "notes")
     def test_with_extras(self, package_factory):
-        preset = package_factory(**{config.DEFAULT_PREFIX + "license_id": '["notspecified"]', "type": "test_preset", "notes": '{"ext_a": "1"}'})
+        preset = package_factory(
+            **{
+                config.DEFAULT_PREFIX + "license_id": '["notspecified"]',
+                "type": "test_preset",
+                "notes": '{"ext_a": "1"}',
+            }
+        )
         payload = h.payload_from_preset(preset["id"])
-        assert payload == {'extras': {"ext_a": "1"}, 'fq': 'license_id:"notspecified"'}
+        assert payload == {
+            "extras": {"ext_a": "1"},
+            "fq": 'license_id:"notspecified"',
+        }
 
     def test_multi_facet(self, package_factory):
-        preset = package_factory(**{config.DEFAULT_PREFIX + "license_id": '["notspecified", "cc-by"]', "type": "test_preset"})
+        preset = package_factory(
+            **{
+                config.DEFAULT_PREFIX
+                + "license_id": '["notspecified", "cc-by"]',
+                "type": "test_preset",
+            }
+        )
         payload = h.payload_from_preset(preset["id"])
-        assert payload == {'extras': {}, 'fq': 'license_id:"notspecified" license_id:"cc-by"'}
+        assert payload == {
+            "extras": {},
+            "fq": 'license_id:"notspecified" license_id:"cc-by"',
+        }

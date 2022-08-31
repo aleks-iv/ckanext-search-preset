@@ -24,7 +24,6 @@ class SearchPresetTestPlugin(plugins.SingletonPlugin, DefaultDatasetForm):
         schema[DEFAULT_PREFIX + "license_id"] = [ignore_missing, convert]
         return schema
 
-
     def show_package_schema(self):
         schema = super().show_package_schema()
         ignore_missing = tk.get_validator("ignore_missing")

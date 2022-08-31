@@ -91,9 +91,7 @@ def preset_payload(context, data_dict):
         )
         extras = {}
 
-
     return {"fq": fq.strip(), "extras": extras}
-
 
 
 @action
@@ -116,8 +114,7 @@ def preset_list(context, data_dict):
         Result of the search by preset
     """
     payload = tk.get_action("search_preset_preset_payload")(
-        context,
-        {"id": data_dict["id"], "exclude_self": True}
+        context, {"id": data_dict["id"], "exclude_self": True}
     )
 
     payload["fq"] += " " + data_dict["extra_fq"]
@@ -126,7 +123,6 @@ def preset_list(context, data_dict):
     payload.update(data_dict["search_patch"])
     result = tk.get_action("package_search")(context, payload)
     return result
-
 
 
 @action
@@ -146,5 +142,7 @@ def preset_count(context, data_dict):
     Returns:
         Number of packages found by preset
     """
-    result = tk.get_action("search_preset_preset_list")(context, dict(data_dict, rows=0))
+    result = tk.get_action("search_preset_preset_list")(
+        context, dict(data_dict, rows=0)
+    )
     return result["count"]

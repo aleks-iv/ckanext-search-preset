@@ -5,7 +5,6 @@ from pytest_factoryboy import register
 from ckan.tests import factories
 
 
-
 @register
 class UserFactory(factories.User):
     pass
@@ -13,7 +12,6 @@ class UserFactory(factories.User):
 
 class DatasetFactory(factories.Dataset):
     pass
-
 
 
 class OrganizationFactory(factories.Organization):

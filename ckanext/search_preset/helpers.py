@@ -105,7 +105,9 @@ def prepare_filters(filters: dict[str, list[str]]) -> dict[str, str]:
 @helper
 def count_preset(id_: str, extra_fq: str = "") -> int:
     """Count the number of packages included into preset."""
-    return tk.get_action("search_preset_preset_count")({}, {"id": id_, "extra_fq": extra_fq})
+    return tk.get_action("search_preset_preset_count")(
+        {}, {"id": id_, "extra_fq": extra_fq}
+    )
 
 
 #
@@ -117,12 +119,15 @@ def list_preset(
     extra_search: dict[str, Any] = {},
 ) -> dict[str, Any]:
     """Return the search result with all the packages included into preset."""
-    return tk.get_action("search_preset_preset_list")({}, {
-        "id": id_,
-        "extra_fq": extra_fq,
-        "rows": limit,
-        "search_patch": extra_search
-    })
+    return tk.get_action("search_preset_preset_list")(
+        {},
+        {
+            "id": id_,
+            "extra_fq": extra_fq,
+            "rows": limit,
+            "search_patch": extra_search,
+        },
+    )
 
 
 @helper
@@ -133,4 +138,6 @@ def payload_from_preset(
 
     Essentially, get all the active facets that were used when the preset was created.
     """
-    return tk.get_action("search_preset_preset_payload")({}, {"id": id_, "exclude_self" :exclude_self})
+    return tk.get_action("search_preset_preset_payload")(
+        {}, {"id": id_, "exclude_self": exclude_self}
+    )

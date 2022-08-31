@@ -29,4 +29,6 @@ extras_field = config_getter(CONFIG_EXTRAS_FIELD, DEFAULT_EXTRAS_FIELD)
 
 CONFIG_ALLOWED_EXTRAS = "ckanext.search_preset.allowed_extras"
 DEFAULT_ALLOWED_EXTRAS = []
-allowed_extras = config_getter(CONFIG_ALLOWED_EXTRAS, DEFAULT_ALLOWED_EXTRAS, tk.aslist)
+allowed_extras = config_getter(
+    CONFIG_ALLOWED_EXTRAS, DEFAULT_ALLOWED_EXTRAS, tk.aslist
+)
