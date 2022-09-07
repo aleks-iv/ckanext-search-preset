@@ -2,7 +2,7 @@
 
 # ckanext-search-preset
 
-Plugin that adds a number of API actions/helpers for storing search facets as a package fields and listing all the dataset that satisfies stored facets.
+Plugin that adds a number of API actions/helpers for storing search facets as a package fields and listing all the datasets that satisfies stored facets.
 
 One of examples, where you can use this extension:
 
@@ -12,7 +12,7 @@ dataset a **collection**
 example: all the _public_ datasets with at least one _CSV resource_ and _CC-BY_
 license.
 - you want to select all the necessary facets on the search page❶, and
-trigger **collection** creation from there❷(right after seing all the target
+trigger **collection** creation from there❷(right after seeing all the target
 datasets, that are going to be included into the **collection**)
 - When collection is created, you want to see all the datasets that satisfies
 given facets on the collection page❸. In future, all the new datasets that
@@ -121,7 +121,7 @@ prefix is `search_preset_field_` and it can be changed using
 
 Example of a schema for `ckanext-schema` with a definition of preset, that keeps
 values of `license_id`, `res_format` and `tags` facets, can be found at
-[`ckanext/search-preset/example_preset.yaml`](ckanext/search-preset/example_preset.yaml).
+[`ckanext/search_preset/example_preset.yaml`](ckanext/search_preset/example_preset.yaml).
 
 All the active facets are stored as JSON encoded arrays of values. It means that
 you can avoid using ❷ and create preset using `ckanapi`, for example:
