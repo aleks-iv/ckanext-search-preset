@@ -126,6 +126,30 @@ def preset_list(context, data_dict):
 
 @action
 @tk.side_effect_free
+@validate(schema.preset_list)
+def preset_list_ids(context, data_dict):
+    """Return all IDs of packages that belongs to preset.
+
+    :see also: search_preset_prest_list
+
+    Returns:
+        List of IDs
+    """
+    data_dict["search_patch"]["fl"] = "id"
+    data_dict["rows"] = tk.get_action("search_preset_preset_count")(
+        context.copy(), {"id": data_dict["id"]}
+    )
+
+    result = tk.get_action("search_preset_preset_list")(
+        context, data_dict
+    )
+    return [
+        p["id"] for p in result["results"]
+    ]
+
+
+@action
+@tk.side_effect_free
 @validate(schema.preset_count)
 def preset_count(context, data_dict):
     """Generate search dict produced by preset.
