@@ -177,7 +177,7 @@ class TestPayloadFromPreset:
         payload = h.payload_from_preset(preset["id"], True)
         assert payload == {
             "extras": {},
-            "fq": 'license_id:"notspecified" -id:{}'.format(preset["id"]),
+            "fq": 'license_id:"notspecified" -id:"{}"'.format(preset["id"]),
         }
 
     @pytest.mark.ckan_config(config.CONFIG_EXTRAS_FIELD, "notes")
