@@ -82,7 +82,6 @@ def preset_payload(context, data_dict):
     if data_dict["exclude_self_type"]:
         fq += " -type:{}".format(solr_literal(pkg["type"]))
 
-
     try:
         extras = json.loads(pkg.get(ef) or "{}")
     except ValueError:
@@ -118,11 +117,12 @@ def preset_list(context, data_dict):
         Result of the search by preset
     """
     payload = tk.get_action("search_preset_preset_payload")(
-        context, {
+        context,
+        {
             "id": data_dict["id"],
             "exclude_self": data_dict["exclude_self"],
-            "exclude_self_type": data_dict["exclude_self_type"]
-        }
+            "exclude_self_type": data_dict["exclude_self_type"],
+        },
     )
 
     payload["fq"] += " " + data_dict["extra_fq"]
@@ -149,12 +149,8 @@ def preset_list_ids(context, data_dict):
         context.copy(), data_dict
     )
 
-    result = tk.get_action("search_preset_preset_list")(
-        context, data_dict
-    )
-    return [
-        p["id"] for p in result["results"]
-    ]
+    result = tk.get_action("search_preset_preset_list")(context, data_dict)
+    return [p["id"] for p in result["results"]]
 
 
 @action

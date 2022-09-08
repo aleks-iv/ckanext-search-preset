@@ -17,7 +17,7 @@ def preset_list(
     default,
     int_validator,
     convert_to_json_if_string,
-    boolean_validator
+    boolean_validator,
 ):
     return {
         "id": [not_missing, unicode_safe],
