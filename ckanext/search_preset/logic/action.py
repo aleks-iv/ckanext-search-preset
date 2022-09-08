@@ -29,10 +29,11 @@ def preset_payload(context, data_dict):
     Args:
         id(str): ID of the search preset(package)
         exclude_self(bool, optional): exclude self from the search payload
-
+        exclude_self_type(bool, optional): exclude packages with the same type as the preset the search payload
     Returns:
         dictionary with `fq` and `extras` keys
     """
+
     tk.check_access("search_preset_preset_payload", context, data_dict)
     pkg = tk.get_action("package_show")({}, {"id": data_dict["id"]})
     prefix: str = config.prefix()
@@ -76,7 +77,11 @@ def preset_payload(context, data_dict):
         )
 
     if data_dict["exclude_self"]:
-        fq += " -id:{}".format(pkg["id"])
+        fq += " -id:{}".format(solr_literal(pkg["id"]))
+
+    if data_dict["exclude_self_type"]:
+        fq += " -type:{}".format(solr_literal(pkg["type"]))
+
 
     try:
         extras = json.loads(pkg.get(ef) or "{}")
@@ -113,7 +118,11 @@ def preset_list(context, data_dict):
         Result of the search by preset
     """
     payload = tk.get_action("search_preset_preset_payload")(
-        context, {"id": data_dict["id"], "exclude_self": True}
+        context, {
+            "id": data_dict["id"],
+            "exclude_self": data_dict["exclude_self"],
+            "exclude_self_type": data_dict["exclude_self_type"]
+        }
     )
 
     payload["fq"] += " " + data_dict["extra_fq"]
@@ -137,7 +146,7 @@ def preset_list_ids(context, data_dict):
     """
     data_dict["search_patch"]["fl"] = "id"
     data_dict["rows"] = tk.get_action("search_preset_preset_count")(
-        context.copy(), {"id": data_dict["id"]}
+        context.copy(), data_dict
     )
 
     result = tk.get_action("search_preset_preset_list")(
