@@ -4,13 +4,14 @@ import ckan.plugins as plugins
 import ckan.plugins.toolkit as tk
 
 from . import helpers
-from .logic import action, auth
+from .logic import action, auth, validators
 
 
 class SearchPresetPlugin(plugins.SingletonPlugin):
     plugins.implements(plugins.IConfigurer)
     plugins.implements(plugins.IAuthFunctions)
     plugins.implements(plugins.IActions)
+    plugins.implements(plugins.IValidators)
     plugins.implements(plugins.ITemplateHelpers)
     plugins.implements(plugins.IPackageController, inherit=True)
 
@@ -25,6 +26,10 @@ class SearchPresetPlugin(plugins.SingletonPlugin):
     # IActions
     def get_actions(self):
         return action.get_actions()
+
+    # IValidators
+    def get_validators(self):
+        return validators.get_validators()
 
     # ITemplateHelpers
     def get_helpers(self):

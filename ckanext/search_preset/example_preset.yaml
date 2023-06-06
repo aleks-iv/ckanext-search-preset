@@ -25,6 +25,7 @@ dataset_fields:
 
   - field_name: search_preset_field_license_id
     label: License
+    validators: search_preset_decode_from_base64
 
   - field_name: search_preset_field_res_format
     label: Format

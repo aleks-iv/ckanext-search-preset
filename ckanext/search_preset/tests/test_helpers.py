@@ -85,6 +85,13 @@ class TestPrepareFilters:
                 "exfield": json.dumps({"ext_b": "2"}),
             }
 
+    @pytest.mark.ckan_config(config.CONFIG_ALLOWED, "x")
+    @pytest.mark.ckan_config(config.CONFIG_CONVERT_TO_BASE64, "true")
+    def test_base64_encoding(self):
+        assert h.prepare_filters(self._filters()) == {
+            config.DEFAULT_PREFIX + "x": "WyJ5Il0="
+        }
+
 
 @pytest.mark.usefixtures("with_plugins", "clean_db", "clean_index")
 class TestListPreset:

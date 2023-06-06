@@ -93,6 +93,10 @@ ckanext.search_preset.extras_field = search_extra_field_
 # By default, all the `ext_*` fields are captured.
 # (optional, default: <any passed extra field>).
 ckanext.search_preset.allowed_extras = ext_bbox ext_start_date
+
+# Use base64 encoding to encode JSON in url.
+# (optional, default: false).
+ckanext.search_preset.convert_to_base64 = true
 ```
 
 ## Preset requirements
@@ -117,7 +121,9 @@ the value of facet inside a filed named as `<PREFIX><FACET_NAME>`. Default
 prefix is `search_preset_field_` and it can be changed using
 `ckanext.search_preset.field_prefix` config option. So, in order to store
 `license_id` facet, with default prefix, you have to define a field named
-`search_preset_field_license_id`.
+`search_preset_field_license_id`. If `ckanext.search_preset.convert_to_base64` is
+enabled the `search_preset_decode_from_base64` validator should be applied to
+the custom fields of the preset package schema.
 
 Example of a schema for `ckanext-schema` with a definition of preset, that keeps
 values of `license_id`, `res_format` and `tags` facets, can be found at

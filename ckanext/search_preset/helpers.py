@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import base64
 import json
 import logging
 from typing import Any, Optional
@@ -101,7 +102,20 @@ def prepare_filters(filters: dict[str, list[str]]) -> dict[str, str]:
             }
         )
 
+    if config.convert_to_base64():
+        return _encode_filters_to_base64(prepared)
+
     return prepared
+
+
+def _encode_filters_to_base64(filters: dict[str, Any]) -> dict[str, Any]:
+    encoded_filters = {}
+
+    for filter_key, filter_value in filters.items():
+        encoded_value = base64.b64encode(filter_value.encode('utf-8')).decode('utf-8')
+        encoded_filters[filter_key] = encoded_value
+
+    return encoded_filters
 
 
 #
