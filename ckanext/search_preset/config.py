@@ -34,4 +34,4 @@ allowed_extras = config_getter(
 
 CONFIG_CONVERT_TO_BASE64 = "ckanext.search_preset.convert_to_base64"
 DEFAULT_CONVERT_TO_BASE64 = False
-convert_to_base64 = config_getter(CONFIG_CONVERT_TO_BASE64, DEFAULT_CONVERT_TO_BASE64)
+convert_to_base64 = config_getter(CONFIG_CONVERT_TO_BASE64, DEFAULT_CONVERT_TO_BASE64, tk.asbool)
