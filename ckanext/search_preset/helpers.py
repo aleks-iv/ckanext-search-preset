@@ -93,14 +93,14 @@ def prepare_filters(filters: dict[str, list[str]]) -> dict[str, str]:
     if ef:
         allowed_extras = set(config.allowed_extras())
         allow_all_extras = not allowed_extras
-        prepared[ef] = json.dumps(
-            {
-                k: v
-                for k, v in tk.request.params.to_dict(flat=True).items()
-                if k.startswith("ext_")
-                and (allow_all_extras or k in allowed_extras)
-            }
-        )
+        ef_value = {
+            k: v
+            for k, v in tk.request.params.to_dict(flat=True).items()
+            if k.startswith("ext_")
+               and (allow_all_extras or k in allowed_extras)
+        }
+        if ef_value:
+            prepared[ef] = json.dumps(ef_value)
 
     if config.convert_to_base64():
         return _encode_filters_to_base64(prepared)
